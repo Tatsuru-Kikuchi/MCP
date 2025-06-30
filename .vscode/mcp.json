@@ -4,7 +4,7 @@
       {
         "type": "promptString",
         "id": "github_token",
-        "description": "GitHubパーソナルアクセストークン",
+        "description": "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",
         "password": true
       }
     ],
