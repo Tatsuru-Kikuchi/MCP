@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assets Dashboard | Daily Returns 2020-2024</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .dashboard {
+            padding: 2rem 0;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card h3 {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .positive { color: #27ae60; background: rgba(39, 174, 96, 0.1); }
+        .negative { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .correlation-matrix {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .correlation-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            margin-top: 1rem;
+        }
+
+        .correlation-cell {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .correlation-header {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Financial Assets Dashboard</h1>
+            <p>Daily Returns Analysis: S&P 500, Gold, Bitcoin, Ethereum, XRP (2020-2024)</p>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="metrics-grid" id="metricsGrid">
+                <!-- Metrics will be populated by JavaScript -->
+            </div>
+
+            <div class="controls">
+                <button class="control-btn active" onclick="setTimeframe('all')">All Time</button>
+                <button class="control-btn" onclick="setTimeframe('2024')">2024</button>
+                <button class="control-btn" onclick="setTimeframe('2023')">2023</button>
+                <button class="control-btn" onclick="setTimeframe('ytd')">YTD</button>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Cumulative Returns</div>
+                    <canvas id="cumulativeChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Daily Returns Distribution</div>
+                    <canvas id="distributionChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Rolling 30-Day Volatility</div>
+                    <canvas id="volatilityChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Risk vs Return Profile</div>
+                    <canvas id="riskReturnChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="correlation-matrix">
+                <div class="chart-title">Asset Correlation Matrix</div>
+                <div class="correlation-grid" id="correlationGrid">
+                    <!-- Correlation matrix will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>&copy; 2024 Financial Dashboard | Data Source: Yahoo Finance | 
+            <a href="https://github.com/Tatsuru-Kikuchi/MCP" style="color: #667eea;">GitHub Repository</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Sample financial data - in a real implementation, this would be loaded from APIs or files
+        const assets = ['SP500', 'Gold', 'Bitcoin', 'Ethereum', 'XRP'];
+        const colors = {
+            'SP500': '#1f77b4',
+            'Gold': '#ff7f0e', 
+            'Bitcoin': '#f39c12',
+            'Ethereum': '#9b59b6',
+            'XRP': '#e74c3c'
+        };
+
+        // Generate sample data for demonstration
+        function generateSampleData() {
+            const data = {};
+            const startDate = new Date('2020-01-01');
+            const endDate = new Date('2024-12-31');
+            const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+            assets.forEach(asset => {
+                data[asset] = {
+                    dates: [],
+                    prices: [],
+                    returns: [],
+                    cumulativeReturns: []
+                };
+
+                let price = asset === 'Bitcoin' ? 7000 : asset === 'Ethereum' ? 130 : 
+                           asset === 'XRP' ? 0.2 : asset === 'Gold' ? 1500 : 3200;
+                let cumulativeReturn = 1;
+
+                for (let i = 0; i <= totalDays; i++) {
+                    const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
+                    
+                    // Skip weekends for traditional assets
+                    if ((asset === 'SP500' || asset === 'Gold') && (date.getDay() === 0 || date.getDay() === 6)) {
+                        continue;
+                    }
+
+                    const volatility = asset === 'Bitcoin' ? 0.04 : asset === 'Ethereum' ? 0.05 :
+                                     asset === 'XRP' ? 0.06 : asset === 'Gold' ? 0.012 : 0.015;
+                    
+                    const drift = asset === 'Bitcoin' ? 0.0003 : asset === 'Ethereum' ? 0.0004 :
+                                 asset === 'XRP' ? 0.0001 : asset === 'Gold' ? 0.00015 : 0.0002;
+
+                    const dailyReturn = (Math.random() - 0.5) * volatility * 2 + drift;
+                    price = price * (1 + dailyReturn);
+                    cumulativeReturn = cumulativeReturn * (1 + dailyReturn);
+
+                    data[asset].dates.push(date.toISOString().split('T')[0]);
+                    data[asset].prices.push(price);
+                    data[asset].returns.push(dailyReturn * 100);
+                    data[asset].cumulativeReturns.push((cumulativeReturn - 1) * 100);
+                }
+            });
+
+            return data;
+        }
+
+        const financialData = generateSampleData();
+        let currentTimeframe = 'all';
+
+        // Initialize dashboard
+        function initDashboard() {
+            updateMetrics();
+            createCharts();
+            createCorrelationMatrix();
+        }
+
+        function updateMetrics() {
+            const metricsGrid = document.getElementById('metricsGrid');
+            metricsGrid.innerHTML = '';
+
+            assets.forEach(asset => {
+                const data = financialData[asset];
+                const returns = data.returns.slice(-252); // Last year of data
+                const latestReturn = returns[returns.length - 1];
+                const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+                const volatility = Math.sqrt(returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length);
+                const totalReturn = data.cumulativeReturns[data.cumulativeReturns.length - 1];
+
+                const metricCard = document.createElement('div');
+                metricCard.className = 'metric-card';
+                metricCard.innerHTML = `
+                    <h3>${asset}</h3>
+                    <div class="metric-value" style="color: ${colors[asset]}">${totalReturn.toFixed(1)}%</div>
+                    <div class="metric-change ${latestReturn >= 0 ? 'positive' : 'negative'}">
+                        ${latestReturn >= 0 ? '↗' : '↘'} ${latestReturn.toFixed(2)}% Today
+                    </div>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
+                        Vol: ${(volatility * Math.sqrt(252)).toFixed(1)}% | Avg: ${(avgReturn * 252).toFixed(1)}%
+                    </div>
+                `;
+                metricsGrid.appendChild(metricCard);
+            });
+        }
+
+        function createCharts() {
+            createCumulativeChart();
+            createDistributionChart();
+            createVolatilityChart();
+            createRiskReturnChart();
+        }
+
+        function createCumulativeChart() {
+            const ctx = document.getElementById('cumulativeChart').getContext('2d');
+            
+            const datasets = assets.map(asset => ({
+                label: asset,
+                data: financialData[asset].cumulativeReturns,
+                borderColor: colors[asset],
+                backgroundColor: colors[asset] + '20',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            }));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: financialData[assets[0]].dates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Cumulative Return (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDistributionChart() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            // Create histogram data for each asset
+            const datasets = assets.map(asset => {
+                const returns = financialData[asset].returns;
+                const bins = 50;
+                const min = Math.min(...returns);
+                const max = Math.max(...returns);
+                const binWidth = (max - min) / bins;
+                
+                const histogram = new Array(bins).fill(0);
+                returns.forEach(ret => {
+                    const binIndex = Math.min(Math.floor((ret - min) / binWidth), bins - 1);
+                    histogram[binIndex]++;
+                });
+
+                return {
+                    label: asset,
+                    data: histogram,
+                    backgroundColor: colors[asset] + '60',
+                    borderColor: colors[asset],
+                    borderWidth: 1
+                };
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 50}, (_, i) => i),
+                    datasets: [datasets[0]] // Show only first asset to avoid clutter
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Frequency'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Daily Return (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createVolatilityChart() {
+            const ctx = document.getElementById('volatilityChart').getContext('2d');
+            
+            const datasets = assets.map(asset => {
+                const returns = financialData[asset].returns;
+                const rollingVol = [];
+                
+                for (let i = 29; i < returns.length; i++) {
+                    const window = returns.slice(i - 29, i + 1);
+                    const mean = window.reduce((a, b) => a + b, 0) / window.length;
+                    const variance = window.reduce((sum, ret) => sum + Math.pow(ret - mean, 2), 0) / window.length;
+                    rollingVol.push(Math.sqrt(variance * 252)); // Annualized
+                }
+
+                return {
+                    label: asset,
+                    data: rollingVol,
+                    borderColor: colors[asset],
+                    backgroundColor: colors[asset] + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: financialData[assets[0]].dates.slice(29),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Annualized Volatility (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRiskReturnChart() {
+            const ctx = document.getElementById('riskReturnChart').getContext('2d');
+            
+            const data = assets.map(asset => {
+                const returns = financialData[asset].returns;
+                const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length * 252;
+                const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - returns.reduce((a, b) => a + b, 0) / returns.length, 2), 0) / returns.length;
+                const volatility = Math.sqrt(variance * 252);
+                
+                return {
+                    x: volatility,
+                    y: avgReturn,
+                    label: asset
+                };
+            });
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Assets',
+                        data: data,
+                        backgroundColor: assets.map(asset => colors[asset]),
+                        borderColor: assets.map(asset => colors[asset]),
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const point = context.raw;
+                                    return `${point.label}: Return ${point.y.toFixed(1)}%, Vol ${point.x.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Annualized Volatility (%)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Annualized Return (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCorrelationMatrix() {
+            const correlationGrid = document.getElementById('correlationGrid');
+            correlationGrid.innerHTML = '';
+
+            // Calculate correlation matrix
+            const correlations = {};
+            assets.forEach(asset1 => {
+                correlations[asset1] = {};
+                assets.forEach(asset2 => {
+                    const returns1 = financialData[asset1].returns;
+                    const returns2 = financialData[asset2].returns;
+                    const correlation = calculateCorrelation(returns1, returns2);
+                    correlations[asset1][asset2] = correlation;
+                });
+            });
+
+            // Create header row
+            const headerCell = document.createElement('div');
+            headerCell.className = 'correlation-cell correlation-header';
+            headerCell.textContent = '';
+            correlationGrid.appendChild(headerCell);
+
+            assets.forEach(asset => {
+                const cell = document.createElement('div');
+                cell.className = 'correlation-cell correlation-header';
+                cell.textContent = asset;
+                correlationGrid.appendChild(cell);
+            });
+
+            // Create data rows
+            assets.forEach(asset1 => {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'correlation-cell correlation-header';
+                headerCell.textContent = asset1;
+                correlationGrid.appendChild(headerCell);
+
+                assets.forEach(asset2 => {
+                    const cell = document.createElement('div');
+                    cell.className = 'correlation-cell';
+                    const correlation = correlations[asset1][asset2];
+                    cell.textContent = correlation.toFixed(3);
+                    
+                    // Color coding
+                    const intensity = Math.abs(correlation);
+                    if (correlation > 0) {
+                        cell.style.backgroundColor = `rgba(39, 174, 96, ${intensity * 0.7})`;
+                    } else {
+                        cell.style.backgroundColor = `rgba(231, 76, 60, ${intensity * 0.7})`;
+                    }
+                    
+                    if (intensity > 0.5) {
+                        cell.style.color = 'white';
+                    }
+                    
+                    correlationGrid.appendChild(cell);
+                });
+            });
+        }
+
+        function calculateCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            const sumX = x.slice(0, n).reduce((a, b) => a + b, 0);
+            const sumY = y.slice(0, n).reduce((a, b) => a + b, 0);
+            const sumXY = x.slice(0, n).reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumX2 = x.slice(0, n).reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = y.slice(0, n).reduce((sum, yi) => sum + yi * yi, 0);
+
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+            return denominator === 0 ? 0 : numerator / denominator;
+        }
+
+        function setTimeframe(timeframe) {
+            // Update active button
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentTimeframe = timeframe;
+            // In a real implementation, you would filter the data and recreate charts
+            console.log('Timeframe changed to:', timeframe);
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
