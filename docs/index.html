@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Assets Dashboard | Daily Returns 2020-2024</title>
+    <title>Financial Assets Dashboard | Daily Log Returns 2020-2024</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -45,6 +45,25 @@
             text-align: center;
             font-size: 1.2rem;
             color: #666;
+        }
+
+        .log-returns-info {
+            background: rgba(39, 174, 96, 0.1);
+            border: 2px solid rgba(39, 174, 96, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .log-returns-info h3 {
+            color: #27ae60;
+            margin-bottom: 0.5rem;
+        }
+
+        .log-returns-info p {
+            color: #2c3e50;
+            font-size: 0.9rem;
         }
 
         .dashboard {
@@ -214,7 +233,11 @@
     <div class="header">
         <div class="container">
             <h1>Financial Assets Dashboard</h1>
-            <p>Daily Returns Analysis: S&P 500, Gold, Bitcoin, Ethereum, XRP (2020-2024)</p>
+            <p>Daily Log Returns Analysis: S&P 500, Gold, Bitcoin, Ethereum, XRP (2020-2024)</p>
+            <div class="log-returns-info">
+                <h3>📊 Using Log Returns for Enhanced Analysis</h3>
+                <p>Log returns provide better statistical properties, reduced skewness, and improved visualization for high-volatility assets like cryptocurrencies. They are time-additive and more suitable for portfolio optimization.</p>
+            </div>
         </div>
     </div>
 
@@ -233,28 +256,28 @@
 
             <div class="charts-grid">
                 <div class="chart-container">
-                    <div class="chart-title">Cumulative Returns</div>
+                    <div class="chart-title">Cumulative Returns (from Log Returns)</div>
                     <canvas id="cumulativeChart" class="chart-canvas"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">Daily Returns Distribution</div>
+                    <div class="chart-title">Daily Log Returns Distribution</div>
                     <canvas id="distributionChart" class="chart-canvas"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">Rolling 30-Day Volatility</div>
+                    <div class="chart-title">Rolling 30-Day Volatility (Log Returns)</div>
                     <canvas id="volatilityChart" class="chart-canvas"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">Risk vs Return Profile</div>
+                    <div class="chart-title">Risk vs Return Profile (Log Returns)</div>
                     <canvas id="riskReturnChart" class="chart-canvas"></canvas>
                 </div>
             </div>
 
             <div class="correlation-matrix">
-                <div class="chart-title">Asset Correlation Matrix</div>
+                <div class="chart-title">Asset Correlation Matrix (Log Returns)</div>
                 <div class="correlation-grid" id="correlationGrid">
                     <!-- Correlation matrix will be populated by JavaScript -->
                 </div>
@@ -266,6 +289,7 @@
         <div class="container">
             <p>&copy; 2024 Financial Dashboard | Data Source: Yahoo Finance | 
             <a href="https://github.com/Tatsuru-Kikuchi/MCP" style="color: #667eea;">GitHub Repository</a></p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Enhanced with Log Returns for better statistical analysis and visualization</p>
         </div>
     </div>
 
@@ -280,7 +304,7 @@
             'XRP': '#e74c3c'
         };
 
-        // Generate sample data for demonstration
+        // Generate sample data for demonstration with log returns
         function generateSampleData() {
             const data = {};
             const startDate = new Date('2020-01-01');
@@ -292,12 +316,13 @@
                     dates: [],
                     prices: [],
                     returns: [],
+                    logReturns: [],
                     cumulativeReturns: []
                 };
 
                 let price = asset === 'Bitcoin' ? 7000 : asset === 'Ethereum' ? 130 : 
                            asset === 'XRP' ? 0.2 : asset === 'Gold' ? 1500 : 3200;
-                let cumulativeReturn = 1;
+                let cumulativeLogReturn = 0;
 
                 for (let i = 0; i <= totalDays; i++) {
                     const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
@@ -314,13 +339,21 @@
                                  asset === 'XRP' ? 0.0001 : asset === 'Gold' ? 0.00015 : 0.0002;
 
                     const dailyReturn = (Math.random() - 0.5) * volatility * 2 + drift;
+                    
+                    // Calculate log return
+                    const logReturn = Math.log(1 + dailyReturn) * 100; // Convert to percentage
+                    
                     price = price * (1 + dailyReturn);
-                    cumulativeReturn = cumulativeReturn * (1 + dailyReturn);
+                    cumulativeLogReturn += Math.log(1 + dailyReturn);
+                    
+                    // Convert cumulative log return back to simple return for display
+                    const cumulativeSimpleReturn = (Math.exp(cumulativeLogReturn) - 1) * 100;
 
                     data[asset].dates.push(date.toISOString().split('T')[0]);
                     data[asset].prices.push(price);
                     data[asset].returns.push(dailyReturn * 100);
-                    data[asset].cumulativeReturns.push((cumulativeReturn - 1) * 100);
+                    data[asset].logReturns.push(logReturn);
+                    data[asset].cumulativeReturns.push(cumulativeSimpleReturn);
                 }
             });
 
@@ -343,10 +376,10 @@
 
             assets.forEach(asset => {
                 const data = financialData[asset];
-                const returns = data.returns.slice(-252); // Last year of data
-                const latestReturn = returns[returns.length - 1];
-                const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-                const volatility = Math.sqrt(returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length);
+                const logReturns = data.logReturns.slice(-252); // Last year of data
+                const latestReturn = logReturns[logReturns.length - 1];
+                const avgReturn = logReturns.reduce((a, b) => a + b, 0) / logReturns.length;
+                const volatility = Math.sqrt(logReturns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / logReturns.length);
                 const totalReturn = data.cumulativeReturns[data.cumulativeReturns.length - 1];
 
                 const metricCard = document.createElement('div');
@@ -355,14 +388,35 @@
                     <h3>${asset}</h3>
                     <div class="metric-value" style="color: ${colors[asset]}">${totalReturn.toFixed(1)}%</div>
                     <div class="metric-change ${latestReturn >= 0 ? 'positive' : 'negative'}">
-                        ${latestReturn >= 0 ? '↗' : '↘'} ${latestReturn.toFixed(2)}% Today
+                        ${latestReturn >= 0 ? '↗' : '↘'} ${latestReturn.toFixed(2)}% Today (Log)
                     </div>
                     <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
                         Vol: ${(volatility * Math.sqrt(252)).toFixed(1)}% | Avg: ${(avgReturn * 252).toFixed(1)}%
                     </div>
+                    <div style="font-size: 0.7rem; color: #888; margin-top: 0.25rem;">
+                        Skew: ${calculateSkewness(logReturns).toFixed(3)} | Kurt: ${calculateKurtosis(logReturns).toFixed(3)}
+                    </div>
                 `;
                 metricsGrid.appendChild(metricCard);
             });
+        }
+
+        function calculateSkewness(data) {
+            const n = data.length;
+            const mean = data.reduce((a, b) => a + b, 0) / n;
+            const variance = data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / n;
+            const stdDev = Math.sqrt(variance);
+            const skewness = data.reduce((sum, x) => sum + Math.pow((x - mean) / stdDev, 3), 0) / n;
+            return skewness;
+        }
+
+        function calculateKurtosis(data) {
+            const n = data.length;
+            const mean = data.reduce((a, b) => a + b, 0) / n;
+            const variance = data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / n;
+            const stdDev = Math.sqrt(variance);
+            const kurtosis = data.reduce((sum, x) => sum + Math.pow((x - mean) / stdDev, 4), 0) / n - 3;
+            return kurtosis;
         }
 
         function createCharts() {
@@ -397,6 +451,13 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}% (from log returns)`;
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -420,16 +481,16 @@
         function createDistributionChart() {
             const ctx = document.getElementById('distributionChart').getContext('2d');
             
-            // Create histogram data for each asset
+            // Create histogram data for log returns of each asset
             const datasets = assets.map(asset => {
-                const returns = financialData[asset].returns;
+                const logReturns = financialData[asset].logReturns;
                 const bins = 50;
-                const min = Math.min(...returns);
-                const max = Math.max(...returns);
+                const min = Math.min(...logReturns);
+                const max = Math.max(...logReturns);
                 const binWidth = (max - min) / bins;
                 
                 const histogram = new Array(bins).fill(0);
-                returns.forEach(ret => {
+                logReturns.forEach(ret => {
                     const binIndex = Math.min(Math.floor((ret - min) / binWidth), bins - 1);
                     histogram[binIndex]++;
                 });
@@ -467,7 +528,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Daily Return (%)'
+                                text: 'Daily Log Return (%)'
                             }
                         }
                     }
@@ -479,11 +540,11 @@
             const ctx = document.getElementById('volatilityChart').getContext('2d');
             
             const datasets = assets.map(asset => {
-                const returns = financialData[asset].returns;
+                const logReturns = financialData[asset].logReturns;
                 const rollingVol = [];
                 
-                for (let i = 29; i < returns.length; i++) {
-                    const window = returns.slice(i - 29, i + 1);
+                for (let i = 29; i < logReturns.length; i++) {
+                    const window = logReturns.slice(i - 29, i + 1);
                     const mean = window.reduce((a, b) => a + b, 0) / window.length;
                     const variance = window.reduce((sum, ret) => sum + Math.pow(ret - mean, 2), 0) / window.length;
                     rollingVol.push(Math.sqrt(variance * 252)); // Annualized
@@ -518,7 +579,7 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Annualized Volatility (%)'
+                                text: 'Annualized Volatility (%) - Log Returns'
                             }
                         }
                     }
@@ -530,9 +591,9 @@
             const ctx = document.getElementById('riskReturnChart').getContext('2d');
             
             const data = assets.map(asset => {
-                const returns = financialData[asset].returns;
-                const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length * 252;
-                const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - returns.reduce((a, b) => a + b, 0) / returns.length, 2), 0) / returns.length;
+                const logReturns = financialData[asset].logReturns;
+                const avgReturn = logReturns.reduce((a, b) => a + b, 0) / logReturns.length * 252;
+                const variance = logReturns.reduce((sum, ret) => sum + Math.pow(ret - logReturns.reduce((a, b) => a + b, 0) / logReturns.length, 2), 0) / logReturns.length;
                 const volatility = Math.sqrt(variance * 252);
                 
                 return {
@@ -565,7 +626,7 @@
                             callbacks: {
                                 label: function(context) {
                                     const point = context.raw;
-                                    return `${point.label}: Return ${point.y.toFixed(1)}%, Vol ${point.x.toFixed(1)}%`;
+                                    return `${point.label}: Return ${point.y.toFixed(1)}%, Vol ${point.x.toFixed(1)}% (Log Returns)`;
                                 }
                             }
                         }
@@ -574,13 +635,13 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Annualized Volatility (%)'
+                                text: 'Annualized Volatility (%) - Log Returns'
                             }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'Annualized Return (%)'
+                                text: 'Annualized Return (%) - Log Returns'
                             }
                         }
                     }
@@ -592,14 +653,14 @@
             const correlationGrid = document.getElementById('correlationGrid');
             correlationGrid.innerHTML = '';
 
-            // Calculate correlation matrix
+            // Calculate correlation matrix for log returns
             const correlations = {};
             assets.forEach(asset1 => {
                 correlations[asset1] = {};
                 assets.forEach(asset2 => {
-                    const returns1 = financialData[asset1].returns;
-                    const returns2 = financialData[asset2].returns;
-                    const correlation = calculateCorrelation(returns1, returns2);
+                    const logReturns1 = financialData[asset1].logReturns;
+                    const logReturns2 = financialData[asset2].logReturns;
+                    const correlation = calculateCorrelation(logReturns1, logReturns2);
                     correlations[asset1][asset2] = correlation;
                 });
             });
