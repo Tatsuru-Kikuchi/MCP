@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Dashboard - Simple & Clean</title>
+    <title>Financial Dashboard - Assets & Currencies</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -45,9 +45,33 @@
             font-size: 1rem;
         }
 
+        .asset-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: 2px solid #3498db;
+            color: #3498db;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
         .metrics-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -199,6 +223,15 @@
             color: #7f8c8d;
         }
 
+        .currency-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -222,8 +255,19 @@
     <div class="container">
         <header>
             <h1>📊 Financial Dashboard</h1>
-            <p class="subtitle">Simple analysis of major financial assets (2020-2024)</p>
+            <p class="subtitle">Analysis of major financial assets and currencies (2020-2024)</p>
         </header>
+
+        <div class="asset-tabs">
+            <button class="tab-btn active" onclick="setAssetFilter('all')">All Assets</button>
+            <button class="tab-btn" onclick="setAssetFilter('traditional')">Traditional</button>
+            <button class="tab-btn" onclick="setAssetFilter('crypto')">Crypto</button>
+            <button class="tab-btn" onclick="setAssetFilter('currencies')">Currencies</button>
+        </div>
+
+        <div class="currency-info" id="currencyInfo" style="display: none;">
+            💱 Currency pairs show exchange rates: JPY/USD (Yen per Dollar), EUR/USD (Euro to Dollar), and USD Index (Dollar strength vs basket of currencies)
+        </div>
 
         <div class="metrics-row" id="metricsContainer">
             <div class="loading">Loading market data...</div>
@@ -278,17 +322,21 @@
     </div>
 
     <script>
-        // Asset configuration
+        // Asset configuration with categories
         const assets = {
-            'SP500': { name: 'S&P 500', color: '#3498db' },
-            'Gold': { name: 'Gold', color: '#f39c12' },
-            'Bitcoin': { name: 'Bitcoin', color: '#e67e22' },
-            'Ethereum': { name: 'Ethereum', color: '#9b59b6' },
-            'XRP': { name: 'XRP', color: '#e74c3c' }
+            'SP500': { name: 'S&P 500', color: '#3498db', category: 'traditional' },
+            'Gold': { name: 'Gold', color: '#f39c12', category: 'traditional' },
+            'Bitcoin': { name: 'Bitcoin', color: '#e67e22', category: 'crypto' },
+            'Ethereum': { name: 'Ethereum', color: '#9b59b6', category: 'crypto' },
+            'XRP': { name: 'XRP', color: '#e74c3c', category: 'crypto' },
+            'JPY_USD': { name: 'JPY/USD', color: '#16a085', category: 'currencies' },
+            'EUR_USD': { name: 'EUR/USD', color: '#2ecc71', category: 'currencies' },
+            'USD_Index': { name: 'USD Index', color: '#34495e', category: 'currencies' }
         };
 
         let financialData = {};
         let currentTimeframe = 'all';
+        let currentFilter = 'all';
         let charts = {};
 
         // Generate sample financial data
@@ -308,13 +356,16 @@
                 let price = assetKey === 'Bitcoin' ? 7000 : 
                            assetKey === 'Ethereum' ? 130 : 
                            assetKey === 'XRP' ? 0.2 : 
-                           assetKey === 'Gold' ? 1500 : 3200;
+                           assetKey === 'Gold' ? 1500 :
+                           assetKey === 'JPY_USD' ? 110 :
+                           assetKey === 'EUR_USD' ? 1.18 :
+                           assetKey === 'USD_Index' ? 92 : 3200;
 
                 for (let i = 0; i <= totalDays; i++) {
                     const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
                     
-                    // Skip weekends for traditional assets
-                    if ((assetKey === 'SP500' || assetKey === 'Gold') && 
+                    // Skip weekends for traditional assets and currencies
+                    if ((assets[assetKey].category !== 'crypto') && 
                         (date.getDay() === 0 || date.getDay() === 6)) {
                         continue;
                     }
@@ -322,12 +373,14 @@
                     const volatility = assetKey === 'Bitcoin' ? 0.04 : 
                                      assetKey === 'Ethereum' ? 0.05 :
                                      assetKey === 'XRP' ? 0.06 : 
-                                     assetKey === 'Gold' ? 0.012 : 0.015;
+                                     assetKey === 'Gold' ? 0.012 :
+                                     assetKey.includes('USD') ? 0.008 : 0.015;
                     
                     const drift = assetKey === 'Bitcoin' ? 0.0003 : 
                                  assetKey === 'Ethereum' ? 0.0004 :
                                  assetKey === 'XRP' ? 0.0001 : 
-                                 assetKey === 'Gold' ? 0.00015 : 0.0002;
+                                 assetKey === 'Gold' ? 0.00015 :
+                                 assetKey.includes('USD') ? 0.00005 : 0.0002;
 
                     const dailyReturn = (Math.random() - 0.5) * volatility * 2 + drift;
                     price = price * (1 + dailyReturn);
@@ -339,6 +392,29 @@
             });
 
             return data;
+        }
+
+        // Filter assets based on category
+        function getFilteredAssets() {
+            if (currentFilter === 'all') {
+                return Object.keys(assets);
+            }
+            return Object.keys(assets).filter(key => assets[key].category === currentFilter);
+        }
+
+        // Set asset filter
+        function setAssetFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide currency info
+            document.getElementById('currencyInfo').style.display = 
+                filter === 'currencies' ? 'block' : 'none';
+            
+            updateMetrics();
+            updateCharts();
+            updateSummary();
         }
 
         // Initialize dashboard
@@ -353,8 +429,9 @@
         function updateMetrics() {
             const container = document.getElementById('metricsContainer');
             container.innerHTML = '';
+            const filteredAssets = getFilteredAssets();
 
-            Object.keys(assets).forEach(assetKey => {
+            filteredAssets.forEach(assetKey => {
                 const asset = assets[assetKey];
                 const data = financialData[assetKey];
                 const latestPrice = data.prices[data.prices.length - 1];
@@ -381,8 +458,9 @@
         function createLegend(containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
+            const filteredAssets = getFilteredAssets();
             
-            Object.keys(assets).forEach(assetKey => {
+            filteredAssets.forEach(assetKey => {
                 const asset = assets[assetKey];
                 const legendItem = document.createElement('div');
                 legendItem.className = 'legend-item';
@@ -403,11 +481,28 @@
             createRiskReturnChart();
         }
 
+        // Update charts when filter changes
+        function updateCharts() {
+            createLegend('priceChartLegend');
+            createLegend('returnsChartLegend');
+            
+            // Destroy existing charts
+            if (charts.priceChart) charts.priceChart.destroy();
+            if (charts.returnsChart) charts.returnsChart.destroy();
+            if (charts.riskReturnChart) charts.riskReturnChart.destroy();
+            
+            // Recreate charts
+            createPriceChart();
+            createReturnsChart();
+            createRiskReturnChart();
+        }
+
         // Price performance chart
         function createPriceChart() {
             const ctx = document.getElementById('priceChart').getContext('2d');
+            const filteredAssets = getFilteredAssets();
             
-            const datasets = Object.keys(assets).map(assetKey => {
+            const datasets = filteredAssets.map(assetKey => {
                 const asset = assets[assetKey];
                 const data = financialData[assetKey];
                 const normalizedPrices = data.prices.map(price => 
@@ -430,7 +525,7 @@
             charts.priceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: financialData[Object.keys(assets)[0]].dates,
+                    labels: financialData[filteredAssets[0]].dates,
                     datasets: datasets
                 },
                 options: {
@@ -470,9 +565,10 @@
         // Daily returns chart
         function createReturnsChart() {
             const ctx = document.getElementById('returnsChart').getContext('2d');
+            const filteredAssets = getFilteredAssets();
             
             // Show only the last 100 days for clarity
-            const datasets = Object.keys(assets).map(assetKey => {
+            const datasets = filteredAssets.map(assetKey => {
                 const asset = assets[assetKey];
                 const data = financialData[assetKey];
                 const recentReturns = data.returns.slice(-100);
@@ -492,7 +588,7 @@
             charts.returnsChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: financialData[Object.keys(assets)[0]].dates.slice(-100),
+                    labels: financialData[filteredAssets[0]].dates.slice(-100),
                     datasets: datasets
                 },
                 options: {
@@ -528,8 +624,9 @@
         // Risk vs return scatter plot
         function createRiskReturnChart() {
             const ctx = document.getElementById('riskReturnChart').getContext('2d');
+            const filteredAssets = getFilteredAssets();
             
-            const data = Object.keys(assets).map(assetKey => {
+            const data = filteredAssets.map(assetKey => {
                 const asset = assets[assetKey];
                 const returns = financialData[assetKey].returns;
                 const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length * 252;
@@ -595,7 +692,8 @@
 
         // Update summary statistics
         function updateSummary() {
-            const performance = Object.keys(assets).map(assetKey => {
+            const filteredAssets = getFilteredAssets();
+            const performance = filteredAssets.map(assetKey => {
                 const asset = assets[assetKey];
                 const data = financialData[assetKey];
                 const returns = data.returns;
