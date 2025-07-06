@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Financial Data Fetcher for S&P 500, Gold, BTC, ETH, and XRP
+Financial Data Fetcher for S&P 500, Gold, BTC, ETH, XRP, and Currency Pairs
 Fetches daily price data from Yahoo Finance and calculates daily returns
-Period: January 1, 2021 to December 31, 2024
+Period: January 1, 2020 to December 31, 2024
 """
 
 import yfinance as yf
@@ -18,15 +18,21 @@ def fetch_financial_data():
     
     # Define the assets and their Yahoo Finance symbols
     assets = {
+        # Original assets
         'SP500': '^GSPC',      # S&P 500 Index
         'Gold': 'GC=F',        # Gold Futures
         'Bitcoin': 'BTC-USD',   # Bitcoin
         'Ethereum': 'ETH-USD',  # Ethereum
-        'XRP': 'XRP-USD'       # XRP
+        'XRP': 'XRP-USD',      # XRP
+        
+        # Currency pairs and indices
+        'JPY_USD': 'JPY=X',     # Japanese Yen to USD
+        'EUR_USD': 'EURUSD=X',  # Euro to USD
+        'USD_Index': 'DX-Y.NYB' # US Dollar Index
     }
     
     # Define date range
-    start_date = '2021-01-01'
+    start_date = '2020-01-01'
     end_date = '2024-12-31'
     
     print(f"Fetching data from {start_date} to {end_date}")
@@ -82,7 +88,7 @@ def save_data_to_csv(all_data, daily_returns):
     
     # Save individual asset data
     for asset_name, data in all_data.items():
-        filename = f"{data_dir}/{asset_name}_daily_data_2021_2024.csv"
+        filename = f"{data_dir}/{asset_name}_daily_data_2020_2024.csv"
         data.to_csv(filename)
         print(f"Saved {asset_name} full data to {filename}")
     
@@ -92,7 +98,7 @@ def save_data_to_csv(all_data, daily_returns):
         combined_returns[asset_name] = returns
     
     # Save combined daily returns
-    returns_filename = f"{data_dir}/combined_daily_returns_2021_2024.csv"
+    returns_filename = f"{data_dir}/combined_daily_returns_2020_2024.csv"
     combined_returns.to_csv(returns_filename)
     print(f"Saved combined daily returns to {returns_filename}")
     
@@ -121,6 +127,10 @@ def analyze_returns(daily_returns_df):
         print(f"  Min daily return: {returns.min():.4f}%")
         print(f"  Max daily return: {returns.max():.4f}%")
         print(f"  Annualized volatility: {returns.std() * np.sqrt(252):.4f}%")
+        
+        # Add currency-specific information
+        if asset in ['JPY_USD', 'EUR_USD', 'USD_Index']:
+            print(f"  Asset type: Currency")
     
     # Calculate correlation matrix
     print(f"\nCorrelation Matrix:")
@@ -128,16 +138,29 @@ def analyze_returns(daily_returns_df):
     correlation_matrix = daily_returns_df.corr()
     print(correlation_matrix.round(4))
     
+    # Separate correlation analysis for currencies
+    currency_cols = ['JPY_USD', 'EUR_USD', 'USD_Index']
+    if all(col in daily_returns_df.columns for col in currency_cols):
+        print(f"\nCurrency Correlations with Other Assets:")
+        print("-" * 40)
+        non_currency_cols = [col for col in daily_returns_df.columns if col not in currency_cols]
+        for currency in currency_cols:
+            print(f"\n{currency}:")
+            for asset in non_currency_cols:
+                corr = daily_returns_df[currency].corr(daily_returns_df[asset])
+                print(f"  vs {asset}: {corr:.4f}")
+    
     return correlation_matrix
 
 def main():
     """
     Main function to execute the data fetching and analysis
     """
-    print("Financial Data Fetcher")
+    print("Financial Data Fetcher with Currency Analysis")
     print("=" * 50)
-    print("Fetching daily data for S&P 500, Gold, Bitcoin, Ethereum, and XRP")
-    print("Period: January 1, 2021 to December 31, 2024")
+    print("Fetching daily data for S&P 500, Gold, Bitcoin, Ethereum, XRP,")
+    print("and Currency Pairs (JPY/USD, EUR/USD, USD Index)")
+    print("Period: January 1, 2020 to December 31, 2024")
     print("Source: Yahoo Finance")
     print()
     
@@ -158,7 +181,7 @@ def main():
     print("Data fetching and analysis completed successfully!")
     print("Files saved in 'financial_data' directory:")
     print("- Individual asset data files")
-    print("- combined_daily_returns_2021_2024.csv")
+    print("- combined_daily_returns_2020_2024.csv")
     print("- daily_returns_summary_stats.csv")
 
 if __name__ == "__main__":
