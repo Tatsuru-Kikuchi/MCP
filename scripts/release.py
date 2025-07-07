@@ -57,32 +57,35 @@ def run_command(cmd, description):
     print(f"\nRunning: {description}")
     try:
         result = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
-        if result.stdout:
-            print(result.stdout.strip())
+        print("✓ Success")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
+        print(f"✗ Failed: {e}")
         if e.stderr:
-            print(f"STDERR: {e.stderr}")
+            print(f"Error: {e.stderr}")
         return False
 
 def bump_version(current_version, bump_type):
-    """Bump version number based on type"""
-    parts = list(map(int, current_version.split('.')))
+    """Bump version based on type (major, minor, patch)"""
+    parts = current_version.split('.')
+    if len(parts) != 3:
+        raise ValueError(f"Invalid version format: {current_version}")
+    
+    major, minor, patch = map(int, parts)
     
     if bump_type == 'major':
-        parts[0] += 1
-        parts[1] = 0
-        parts[2] = 0
+        major += 1
+        minor = 0
+        patch = 0
     elif bump_type == 'minor':
-        parts[1] += 1
-        parts[2] = 0
+        minor += 1
+        patch = 0
     elif bump_type == 'patch':
-        parts[2] += 1
+        patch += 1
     else:
         raise ValueError(f"Invalid bump type: {bump_type}")
     
-    return '.'.join(map(str, parts))
+    return f"{major}.{minor}.{patch}"
 
 def main():
     """Main release process"""
@@ -99,12 +102,11 @@ def main():
         print("ERROR: Not in a git repository")
         sys.exit(1)
     
-    # Check for uncommitted changes
-    result = subprocess.run(['git', 'status', '--porcelain'], 
-                          capture_output=True, text=True)
+    # Check git status
+    result = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
     if result.stdout.strip():
-        print("ERROR: You have uncommitted changes. Please commit or stash them first.")
-        print("Uncommitted files:")
+        print("ERROR: Working directory is not clean. Please commit or stash changes.")
+        print("Uncommitted changes:")
         print(result.stdout)
         sys.exit(1)
     
@@ -113,17 +115,17 @@ def main():
         current_version = get_current_version()
         print(f"Current version: {current_version}")
     except Exception as e:
-        print(f"Error getting current version: {e}")
+        print(f"ERROR: {e}")
         sys.exit(1)
     
-    # Ask for new version or bump type
-    print("\nHow would you like to update the version?")
+    # Ask for version bump type
+    print("\nVersion bump options:")
     print("1. Patch (bug fixes)")
     print("2. Minor (new features)")
     print("3. Major (breaking changes)")
     print("4. Custom version")
     
-    choice = input("Choose an option (1-4): ").strip()
+    choice = input("\nChoose bump type (1-4): ").strip()
     
     if choice == '1':
         new_version = bump_version(current_version, 'patch')
@@ -132,10 +134,10 @@ def main():
     elif choice == '3':
         new_version = bump_version(current_version, 'major')
     elif choice == '4':
-        new_version = input("Enter new version: ").strip()
+        new_version = input("Enter custom version: ").strip()
         # Validate version format
         if not re.match(r'^\d+\.\d+\.\d+$', new_version):
-            print("Error: Version must be in format X.Y.Z")
+            print("ERROR: Invalid version format. Use x.y.z")
             sys.exit(1)
     else:
         print("Invalid choice")
@@ -151,7 +153,7 @@ def main():
     try:
         update_version(new_version)
     except Exception as e:
-        print(f"Error updating version: {e}")
+        print(f"ERROR updating version: {e}")
         sys.exit(1)
     
     # Run tests
@@ -170,29 +172,34 @@ def main():
     
     # Create git tag
     tag_name = f"v{new_version}"
-    tag_msg = f"Release {new_version}"
-    if not run_command(f'git tag -a {tag_name} -m "{tag_msg}"', "Creating git tag"):
+    tag_msg = f"Release version {new_version}"
+    if not run_command(f'git tag -a {tag_name} -m "{tag_msg}"', f"Creating tag {tag_name}"):
         sys.exit(1)
     
-    # Push changes and tags
-    print("\nPushing changes to remote...")
-    if not run_command("git push origin main", "Pushing commits"):
-        sys.exit(1)
+    # Ask about pushing
+    print(f"\nVersion {new_version} prepared successfully!")
+    print(f"Created tag: {tag_name}")
     
-    if not run_command(f"git push origin {tag_name}", "Pushing tag"):
-        sys.exit(1)
+    push_choice = input("\nPush changes and tag to remote? (y/N): ")
+    if push_choice.lower() == 'y':
+        if run_command("git push", "Pushing commits"):
+            if run_command(f"git push origin {tag_name}", "Pushing tag"):
+                print(f"\n✓ Successfully released version {new_version}!")
+                print(f"\nNext steps:")
+                print(f"1. Check GitHub Actions for automated PyPI upload")
+                print(f"2. Monitor: https://github.com/Tatsuru-Kikuchi/MCP/actions")
+                print(f"3. Verify package on PyPI: https://pypi.org/project/financial-mcp/")
+            else:
+                print("Failed to push tag")
+        else:
+            print("Failed to push commits")
+    else:
+        print(f"\nChanges prepared but not pushed.")
+        print(f"To push manually:")
+        print(f"  git push")
+        print(f"  git push origin {tag_name}")
     
-    print(f"\n{'='*50}")
-    print("RELEASE COMPLETED SUCCESSFULLY!")
-    print(f"{'='*50}")
-    print(f"Version: {new_version}")
-    print(f"Tag: {tag_name}")
-    print(f"Timestamp: {datetime.now().isoformat()}")
-    print("\nNext steps:")
-    print("1. Check GitHub Actions for automated PyPI publishing")
-    print("2. Monitor PyPI for package availability")
-    print("3. Test installation: pip install financial-mcp")
-    print("4. Update documentation if needed")
-    
+    print("\nRelease process completed!")
+
 if __name__ == "__main__":
     main()
