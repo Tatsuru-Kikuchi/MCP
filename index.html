@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Enhanced Stock Analysis Dashboard - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .demo-notice {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-notice h2 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .setup-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .setup-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        
+        .setup-method {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .setup-method h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-card li {
+            padding: 8px 0;
+            color: #555;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .feature-card li:before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .cta-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .github-button {
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            box-shadow: 0 4px 15px rgba(51, 51, 51, 0.3);
+        }
+        
+        .github-button:hover {
+            box-shadow: 0 6px 20px rgba(51, 51, 51, 0.4);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI-Enhanced Stock Analysis Dashboard</h1>
+            <p>Real-time predictions powered by machine learning algorithms</p>
+        </div>
+        
+        <div class="demo-notice">
+            <h2>📋 Demo Information</h2>
+            <p>This is a demonstration page for the AI-Enhanced Stock Analysis System. The full interactive dashboard requires local installation as it connects to live market data APIs and runs machine learning models in real-time.</p>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>🎯 What Makes This Special</h3>
+            <p><strong>First-of-its-kind system</strong> that directly compares AI predictions with traditional technical analysis in real-time. See how machine learning models perform against classic indicators like RSI, MACD, and moving averages.</p>
+        </div>
+        
+        <div class="setup-section">
+            <h3>🚀 How to Run the Full System</h3>
+            
+            <div class="setup-method">
+                <h4>Method 1: One-Click Setup (Recommended)</h4>
+                <div class="code-block">
+# Clone the repository
+git clone https://github.com/Tatsuru-Kikuchi/MCP-stock.git
+cd MCP-stock
+
+# Install dependencies
+pip install -r requirements_enhanced.txt
+
+# Start the entire system (auto-setup everything)
+python start_system.py
+                </div>
+                <p><strong>✨ The system will automatically:</strong> Check requirements → Set up directories → Fetch market data → Train AI models → Start server → Open dashboard at <strong>http://localhost:8000</strong></p>
+            </div>
+            
+            <div class="setup-method">
+                <h4>Method 2: Docker Deployment</h4>
+                <div class="code-block">
+# Clone and start with Docker
+git clone https://github.com/Tatsuru-Kikuchi/MCP-stock.git
+cd MCP-stock
+docker-compose up -d
+
+# Access dashboard at http://localhost:8000
+                </div>
+                <p><strong>🐳 Perfect for:</strong> Production deployment with containerized services and automatic scaling</p>
+            </div>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h4>🤖 AI-Powered Predictions</h4>
+                <ul>
+                    <li>Machine Learning Models (Random Forest, Gradient Boosting)</li>
+                    <li>Real-time Analysis with Continuous Training</li>
+                    <li>AI vs Traditional Analysis Comparison</li>
+                    <li>Confidence Scoring for Each Prediction</li>
+                    <li>30+ Technical Indicators Integration</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>📊 Sophisticated Dashboard</h4>
+                <ul>
+                    <li>Real-time Interactive Charts</li>
+                    <li>Market Sentiment Analysis</li>
+                    <li>Volatility & Risk-Return Profiles</li>
+                    <li>Opportunity Detection System</li>
+                    <li>Mobile-Responsive Design</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🔄 Real-Time Processing</h4>
+                <ul>
+                    <li>Live Market Data (Yahoo Finance API)</li>
+                    <li>Auto-Refresh Every 5 Minutes</li>
+                    <li>Background Model Training</li>
+                    <li>Performance Optimization</li>
+                    <li>Efficient Data Caching</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🎯 Supported Assets</h4>
+                <ul>
+                    <li>Traditional: S&P 500, Gold</li>
+                    <li>Crypto: Bitcoin, Ethereum, XRP</li>
+                    <li>Forex: JPY/USD, EUR/USD</li>
+                    <li>Indices: USD Index</li>
+                    <li>Easily Extensible for More Assets</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🛠️ Production Features</h4>
+                <ul>
+                    <li>FastAPI Server with REST Endpoints</li>
+                    <li>Docker & Docker Compose Support</li>
+                    <li>Health Monitoring & Status Checks</li>
+                    <li>Interactive API Documentation</li>
+                    <li>Error Handling & Logging</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🎓 Educational Value</h4>
+                <ul>
+                    <li>Learn AI in Finance Practically</li>
+                    <li>Compare AI vs Traditional Methods</li>
+                    <li>Perfect for Research Projects</li>
+                    <li>Professional Development Tool</li>
+                    <li>Open Source & Well-Documented</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <h3>🌟 Ready to Explore AI-Powered Financial Analysis?</h3>
+            <p>Transform your investment analysis with cutting-edge machine learning</p>
+            <a href="https://github.com/Tatsuru-Kikuchi/MCP-stock" class="cta-button github-button">📦 View Repository</a>
+            <a href="https://github.com/Tatsuru-Kikuchi/MCP-stock/blob/main/README_AI_Enhanced.md" class="cta-button">📚 Full Documentation</a>
+            <a href="https://github.com/Tatsuru-Kikuchi/MCP-stock/releases" class="cta-button">🚀 Download Latest</a>
+        </div>
+    </div>
+</body>
+</html>
