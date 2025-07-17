@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Enhanced Stock Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="dashboard_styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI-Enhanced Stock Analysis Dashboard</h1>
+            <p>Real-time predictions powered by machine learning algorithms</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="assetSelect">Asset:</label>
+                <select id="assetSelect">
+                    <option value="all">All Assets</option>
+                    <option value="SP500">S&P 500</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Bitcoin">Bitcoin</option>
+                    <option value="Ethereum">Ethereum</option>
+                    <option value="XRP">XRP</option>
+                    <option value="JPY_USD">JPY/USD</option>
+                    <option value="EUR_USD">EUR/USD</option>
+                    <option value="USD_Index">USD Index</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="timeFrame">Time Frame:</label>
+                <select id="timeFrame">
+                    <option value="1d">1 Day</option>
+                    <option value="7d">7 Days</option>
+                    <option value="30d" selected>30 Days</option>
+                    <option value="90d">90 Days</option>
+                    <option value="1y">1 Year</option>
+                </select>
+            </div>
+            
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+            
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Live Data</span>
+            </div>
+        </div>
+        
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            <p>Loading real-time data and AI predictions...</p>
+        </div>
+        
+        <div id="dashboardContent" style="display: none;">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 Market Sentiment</h3>
+                    <div class="market-sentiment">
+                        <div id="sentimentIndicator" class="sentiment-indicator neutral">Neutral</div>
+                    </div>
+                    <div id="alertsContainer" class="alerts" style="display: none;">
+                        <h4>⚠️ Risk Alerts</h4>
+                        <div id="alertsList"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>🎯 Top Opportunities</h3>
+                    <ul id="opportunitiesList" class="opportunities-list"></ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📈 Real-time Prices</h3>
+                    <div id="realTimeData" class="real-time-data"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>🤖 AI vs Traditional Predictions</h3>
+                    <div id="predictionComparison" class="prediction-comparison"></div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 Price Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>📉 Volatility Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="volatilityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🔄 Returns Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="returnsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>🎯 Risk vs Return</h3>
+                    <div class="chart-container">
+                        <canvas id="riskReturnChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card full-width">
+                <h3>🔗 Correlation Matrix</h3>
+                <div id="correlationMatrix" class="correlation-matrix"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="dashboard_script.js"></script>
+</body>
+</html>
