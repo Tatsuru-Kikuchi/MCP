@@ -303,7 +303,7 @@ We welcome contributions! Areas for improvement:
 
 ## 🎉 **Live Demo**
 
-- **Dashboard**: [https://tatsuru-kikuchi.github.io/MCP/](https://tatsuru-kikuchi.github.io/MCP/)
+- **Demo Page**: [https://tatsuru-kikuchi.github.io/MCP-stock/](https://tatsuru-kikuchi.github.io/MCP-stock/)
 - **Repository**: [https://github.com/Tatsuru-Kikuchi/MCP-stock](https://github.com/Tatsuru-Kikuchi/MCP-stock)
 
 ---
@@ -342,7 +342,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 **🔗 Links:**
 - [GitHub Repository](https://github.com/Tatsuru-Kikuchi/MCP-stock)
-- [Live Demo](https://tatsuru-kikuchi.github.io/MCP/)
+- [Demo Page](https://tatsuru-kikuchi.github.io/MCP-stock/)
 - [Detailed Documentation](README_AI_Enhanced.md)
 
 ---
